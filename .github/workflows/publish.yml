@@ -73,8 +73,8 @@ jobs:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Update npm                
-          run: npm install -g npm@11
+      - name: Update npm
+        run: npx --yes npm@11 install -g npm@11
 
       - name: Install dependencies
         run: npm install --ignore-scripts
