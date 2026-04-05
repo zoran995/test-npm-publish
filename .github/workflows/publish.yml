@@ -70,8 +70,10 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "22"
           registry-url: "https://registry.npmjs.org"
+        env:
+          NODE_AUTH_TOKEN: ""
 
       - name: Install dependencies
         run: npm install --ignore-scripts
@@ -81,6 +83,8 @@ jobs:
         run: |
           echo "Publishing @${{ steps.detect.outputs.version }} with tag '${{ inputs.tag || 'latest' }}'"
           npm publish --tag ${{ inputs.tag || 'latest' }} --provenance
+        env:
+          NODE_AUTH_TOKEN: ""
 
       - name: Dry run summary
         if: inputs.dry-run == 'true'
