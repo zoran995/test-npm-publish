@@ -1,0 +1,105 @@
+name: npm-publish
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "npm dist-tag to publish under (e.g. latest, alpha, beta, next)"
+        required: false
+        default: "latest"
+        type: string
+      dry-run:
+        description: "Validate without publishing"
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+  id-token: write
+
+jobs:
+  publish:
+    permissions:
+      contents: write
+      actions: read
+      id-token: write
+    name: Publish to NPM
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Detect packages to publish
+        id: detect
+        run: |
+          LOCAL_VERSION=$(node -p "require('./package.json').version")
+
+          echo "Local version: $LOCAL_VERSION"
+
+          PUBLISHED=$(npm view test-publish-zoran995 versions --json 2>/dev/null || echo "[]")
+
+          PUBLISH="false"
+          if echo "$PUBLISHED" | node -e "
+            const versions = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
+            process.exit(versions.includes('$LOCAL_VERSION') ? 0 : 1);
+          " 2>/dev/null; then
+            echo "publish-test@$LOCAL_VERSION is already published"
+          else
+            echo "publish-test@$LOCAL_VERSION needs publishing"
+            PUBLISH="true"
+          fi
+
+          if [ "$PUBLISH" = "false" ]; then
+            echo "::error::No packages need publishing. All local versions already exist on npm."
+            exit 1
+          fi
+
+          echo "publish=$PUBLISH" >> "$GITHUB_OUTPUT"
+          echo "version=$LOCAL_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Publish
+        if: steps.detect.outputs.publish == 'true' && inputs.dry-run == false
+        run: |
+          echo "Publishing @${{ steps.detect.outputs.version }} with tag '${{ inputs.tag || 'latest' }}'"
+          npm publish --tag ${{ inputs.tag || 'latest' }} --provenance
+
+      - name: Dry run summary
+        if: inputs.dry-run == 'true'
+        run: |
+          echo "## Dry Run Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.detect.outputs.publish }}" = "true" ]; then
+            echo "- **version @${{ steps.detect.outputs.version }}** would be published with tag \`${{ inputs.tag || 'latest' }}\`" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Tag published versions
+        if: inputs.dry-run != 'true' && (inputs.tag == 'latest' || inputs.tag == '')
+        run: |
+          git config user.name "Bot via GitHub Actions"
+          git config user.email "bot@users.noreply.github.com"
+
+          if [ "${{ steps.detect.outputs.publish }}" = "true" ]; then
+            git tag -a "publish-v${{ steps.detect.outputs.version }}" -m "publish test v${{ steps.detect.outputs.version }}"
+            echo "Tagged publish-v${{ steps.detect.outputs.version }}"
+          fi
+
+          git push origin --tags
