@@ -16,5 +16,9 @@
   },
   "bugs": {
     "url": "https://github.com/zoran995/test-npm-publish/issues"
-  }
+  },
+  "workspaces": [
+    "packages/engine",
+    "packages/widgets"
+  ]
 }
