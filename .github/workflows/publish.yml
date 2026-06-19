@@ -80,7 +80,7 @@ jobs:
         if: steps.detect.outputs.publish == 'true' && inputs.dry-run == false
         run: |
           echo "Publishing @${{ steps.detect.outputs.version }} with tag '${{ inputs.tag || 'latest' }}'"
-          npm publish --tag ${{ inputs.tag || 'latest' }} --provenance
+          npm stage publish --tag ${{ inputs.tag || 'latest' }} --provenance
 
       - name: Dry run summary
         if: inputs.dry-run == 'true'
