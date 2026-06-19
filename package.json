@@ -8,10 +8,10 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zoran995/test-npm-publish"
+    "url": "git+https://github.com/CesiumGS/cesium.git"
   },
   "bugs": {
-    "url": "https://github.com/zoran995/test-npm-publish/issues"
+    "url": "https://github.com/CesiumGS/cesium/issues"
   },
   "main": "index.cjs",
   "module": "./Source/Cesium.js",
