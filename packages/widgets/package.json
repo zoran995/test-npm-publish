@@ -1,6 +1,6 @@
 {
   "name": "test-publish-zoran995-cesium-widgets",
-  "version": "16.0.2",
+  "version": "16.0.3",
   "description": "A widgets library for use with CesiumJS. CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "keywords": [
     "3D",
@@ -41,7 +41,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zoran995/test-npm-publish.git"
+    "url": "git+https://github.com/CesiumGS/cesium.git"
   },
   "homepage": "https://cesium.com/cesiumjs/",
   "license": "Apache-2.0",
