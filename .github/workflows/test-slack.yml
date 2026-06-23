@@ -6,13 +6,10 @@ on:
       - slack
 
 jobs:
-  test:
+  test-success:
     runs-on: ubuntu-latest
     steps:
-      - name: Simulate failure
-        run: exit 1
-
-      - name: Send success notification on Slack
+      - name: Send success notification (new - slackapi/slack-github-action)
         uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -29,20 +26,50 @@ jobs:
                   - type: mrkdwn
                     text: "*Repo:* ${{ github.repository }} | *Ref:* ${{ github.ref }} | *Commit:* <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}> | <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>"
 
-      - name: Send failure or cancellation notification on Slack
-        if: failure() || cancelled()
+      - name: Send success notification (old - 8398a7/action-slack)
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          fields: repo,commit,action,ref
+          author_name: ${{ github.workflow }}
+          mention: here
+          if_mention: always
+          text: ":white_check_mark: Published v1.2.3 to https://www.npmjs.com/package/terriajs"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  test-failure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simulate failure
+        run: exit 1
+
+      - name: Send failure notification (new - slackapi/slack-github-action)
+        if: failure()
         uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "<!here> :x: ${{ github.workflow }} ${{ job.status }}"
+            text: "<!here> :x: ${{ github.workflow }} failure"
             blocks:
               - type: section
                 text:
                   type: mrkdwn
-                  text: "<!here> :x: *${{ github.workflow }}* ${{ job.status }}"
+                  text: "<!here> :x: *${{ github.workflow }}* failure"
               - type: context
                 elements:
                   - type: mrkdwn
                     text: "*Repo:* ${{ github.repository }} | *Ref:* ${{ github.ref }} | *Commit:* <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}> | <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>"
+
+      - name: Send failure notification (old - 8398a7/action-slack)
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          fields: repo,commit,action,ref
+          author_name: ${{ github.workflow }}
+          mention: here
+          if_mention: always
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
