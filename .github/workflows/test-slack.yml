@@ -1,0 +1,45 @@
+name: test-slack
+
+on:
+  push:
+    branches:
+      - slack
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send success notification on Slack
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "<!here> :white_check_mark: Published v1.2.3 to https://www.npmjs.com/package/terriajs"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "<!here> :white_check_mark: Published v1.2.3 to <https://www.npmjs.com/package/terriajs|npmjs>"
+              - type: context
+                elements:
+                  - type: mrkdwn
+                    text: "*Repo:* ${{ github.repository }} | *Ref:* ${{ github.ref }} | *Commit:* <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}> | <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>"
+
+      - name: Send failure or cancellation notification on Slack
+        if: failure() || cancelled()
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "<!here> :x: ${{ github.workflow }} ${{ job.status }}"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "<!here> :x: *${{ github.workflow }}* ${{ job.status }}"
+              - type: context
+                elements:
+                  - type: mrkdwn
+                    text: "*Repo:* ${{ github.repository }} | *Ref:* ${{ github.ref }} | *Commit:* <https://github.com/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}> | <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>"
